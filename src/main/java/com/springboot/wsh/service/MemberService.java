@@ -1,6 +1,7 @@
 package com.springboot.wsh.service;
 
 import com.springboot.wsh.entity.Member;
+import com.springboot.wsh.repository.MemberRepository;
 import com.springboot.wsh.sender.MemberRegisterSender;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

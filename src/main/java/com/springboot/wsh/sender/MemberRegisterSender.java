@@ -2,14 +2,9 @@ package com.springboot.wsh.sender;
 
 import com.springboot.wsh.constants.Constants;
 import com.springboot.wsh.entity.Member;
-import com.springboot.wsh.utils.CommonUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 
 /**
  * @Title: MemberRegisterSender
@@ -30,7 +25,6 @@ public class MemberRegisterSender {
      * @param message 消息内容
      */
     public void sendMessage(Member message) throws Exception {
-//        byte[] bytes = CommonUtils.getBytesFromObject(message);
         rabbitTemplate.convertAndSend(Constants.MEMBER_TOPIC_EXCHANGE_NAME, Constants.MEMBER_TOPIC_EXCHANGE_ROUTE_KEY, message);
     }
 

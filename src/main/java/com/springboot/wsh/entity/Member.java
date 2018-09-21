@@ -1,5 +1,6 @@
 package com.springboot.wsh.entity;
 
+import javax.persistence.*;
 import java.io.Serializable;
 
 /**
@@ -9,20 +10,27 @@ import java.io.Serializable;
  * @Author WeiShiHuai
  * @Date 2018/9/21 14:53
  */
+@Entity
+@Table(name = "member")
 public class Member implements Serializable {
-
+    @Id
+    @Column(name = "id")
+    @GeneratedValue
     private Long id;
     /**
      * 用户名
      */
-    private String usernmae;
+    @Column(name = "username")
+    private String username;
     /**
      * 密码
      */
+    @Column(name = "password")
     private String password;
     /**
      * 邮箱
      */
+    @Column(name = "email")
     private String email;
 
     public Long getId() {
@@ -33,12 +41,12 @@ public class Member implements Serializable {
         this.id = id;
     }
 
-    public String getUsernmae() {
-        return usernmae;
+    public String getUsername() {
+        return username;
     }
 
-    public void setUsernmae(String usernmae) {
-        this.usernmae = usernmae;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getPassword() {
