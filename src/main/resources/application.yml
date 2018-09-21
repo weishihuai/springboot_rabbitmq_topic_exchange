@@ -1,0 +1,12 @@
+server:
+  port: 1111
+spring:
+  application:
+    name: rabbitmq_topic_exchange
+  rabbitmq:
+    host: localhost
+    virtual-host: /
+    username: guest
+    password: guest
+    publisher-confirms: true
+    port: 5672
