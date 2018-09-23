@@ -1,8 +1,9 @@
 package com.springboot.wsh.mail;
 
+import com.springboot.wsh.constants.Constants;
 import com.springboot.wsh.entity.MailEntity;
-import com.springboot.wsh.enums.MailContentTypeEnum;
 import com.springboot.wsh.utils.PropertiesUtils;
+import org.apache.commons.lang.StringUtils;
 
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
@@ -30,7 +31,7 @@ public class EMailSender {
      * @param title 标题信息
      * @return
      */
-    public EMailSender title(String title) {
+    public EMailSender setTitle(String title) {
         mail.setTitle(title);
         return this;
     }
@@ -41,7 +42,7 @@ public class EMailSender {
      * @param content
      * @return
      */
-    public EMailSender content(String content) {
+    public EMailSender setContent(String content) {
         mail.setContent(content);
         return this;
     }
@@ -52,8 +53,8 @@ public class EMailSender {
      * @param typeEnum
      * @return
      */
-    public EMailSender contentType(MailContentTypeEnum typeEnum) {
-        mail.setContentType(typeEnum.getValue());
+    public EMailSender setContentType(String typeEnum) {
+        mail.setContentType(typeEnum);
         return this;
     }
 
@@ -63,7 +64,7 @@ public class EMailSender {
      * @param targets
      * @return
      */
-    public EMailSender targets(List<String> targets) {
+    public EMailSender setSendMailTargets(List<String> targets) {
         mail.setList(targets);
         return this;
     }
@@ -74,23 +75,8 @@ public class EMailSender {
      * @throws Exception 如果发送失败会抛出异常信息
      */
     public void send() throws Exception {
-        //默认使用html内容发送
-        if (mail.getContentType() == null) {
-            mail.setContentType(MailContentTypeEnum.HTML.getValue());
-        }
-
-        if (mail.getTitle() == null || mail.getTitle().trim().length() == 0) {
-            throw new Exception("邮件标题没有设置.调用title方法设置");
-        }
-
-        if (mail.getContent() == null || mail.getContent().trim().length() == 0) {
-            throw new Exception("邮件内容没有设置.调用content方法设置");
-        }
-
-        if (mail.getList().size() == 0) {
-            throw new Exception("没有接受者邮箱地址.调用targets方法设置");
-        }
-
+        //校验发送邮件对象参数是否设置
+        this.checkMailParams(mail);
         //读取/resource/mail.properties文件内容
         final PropertiesUtils properties = new PropertiesUtils("mail");
         // 创建Properties 类用于记录邮箱的一些属性
@@ -98,13 +84,13 @@ public class EMailSender {
         // 表示SMTP发送邮件，进行身份验证
         props.put("mail.smtp.auth", "true");
         //此处填写SMTP服务器
-        props.put("mail.smtp.host", properties.getValue("mail.smtp.service"));
-        //设置端口号，QQ邮箱给出了两个端口465/587
-        props.put("mail.smtp.port", properties.getValue("mail.smtp.prot"));
+        props.put("mail.smtp.host", properties.getValue("send.mail.smtp.service"));
+        //设置端口号，QQ邮箱两个端口465/587
+        props.put("mail.smtp.port", properties.getValue("send.mail.smtp.prot"));
         // 设置发送邮箱
-        props.put("mail.user", properties.getValue("mail.from.address"));
-        // 设置发送邮箱的16位STMP口令
-        props.put("mail.password", properties.getValue("mail.from.smtp.pwd"));
+        props.put("mail.user", properties.getValue("send.mail.from.address"));
+        // 设置授权码
+        props.put("mail.password", properties.getValue("send.mail.from.smtp.pwd"));
 
         // 构建授权信息，用于进行SMTP进行身份验证
         Authenticator authenticator = new Authenticator() {
@@ -120,33 +106,52 @@ public class EMailSender {
         // 创建邮件消息
         MimeMessage message = new MimeMessage(mailSession);
         // 设置发件人
-        String nickName = MimeUtility.encodeText(properties.getValue("mail.from.nickname"));
+        String nickName = MimeUtility.encodeText(properties.getValue("send.mail.from.nickname"));
         InternetAddress form = new InternetAddress(nickName + " <" + props.getProperty("mail.user") + ">");
         message.setFrom(form);
 
         // 设置邮件标题
         message.setSubject(mail.getTitle());
         //html发送邮件
-        if (mail.getContentType().equals(MailContentTypeEnum.HTML.getValue())) {
-            // 设置邮件的内容体
-            message.setContent(mail.getContent(), mail.getContentType());
-        }
-        //文本发送邮件
-        else if (mail.getContentType().equals(MailContentTypeEnum.TEXT.getValue())) {
+        if (mail.getContentType().equals(Constants.SEND_MAIL_HTML_TYPE)) {
+            // 设置邮件的内容体 默认使用html方式发送
+            message.setContent(mail.getContent(), StringUtils.isBlank(mail.getContentType()) ? Constants.SEND_MAIL_HTML_TYPE : mail.getContentType());
+        } else if (mail.getContentType().equals(Constants.SEND_MAIL_TEXT_TYPE)) {
+            // Text文本方式发送
             message.setText(mail.getContent());
         }
         //发送邮箱地址
         List<String> targets = mail.getList();
-        for (int i = 0; i < targets.size(); i++) {
+        for (String target : targets) {
             try {
                 // 设置收件人的邮箱
-                InternetAddress to = new InternetAddress(targets.get(i));
+                InternetAddress to = new InternetAddress(target);
                 message.setRecipient(Message.RecipientType.TO, to);
-                // 最后当然就是发送邮件啦
+                // 发送邮件
                 Transport.send(message);
             } catch (Exception e) {
                 continue;
             }
+        }
+    }
+
+    /**
+     * 校验发送邮件的一些参数是否设置
+     *
+     * @param mail 邮件发送对象
+     * @throws Exception
+     */
+    private void checkMailParams(MailEntity mail) throws Exception {
+        if (StringUtils.isBlank(mail.getTitle())) {
+            throw new Exception("抱歉，邮件标题不能为空，请先设置邮件标题！");
+        }
+
+        if (StringUtils.isBlank(mail.getContent())) {
+            throw new Exception("抱歉，邮件内容不能为空，请先设置邮件内容！");
+        }
+
+        if (mail.getList().size() == 0) {
+            throw new Exception("抱歉，邮件接收方不能为空，请先设置邮件接收目标对象！");
         }
     }
 }

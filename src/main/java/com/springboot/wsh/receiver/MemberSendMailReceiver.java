@@ -1,7 +1,7 @@
 package com.springboot.wsh.receiver;
 
+import com.springboot.wsh.constants.Constants;
 import com.springboot.wsh.entity.Member;
-import com.springboot.wsh.enums.MailContentTypeEnum;
 import com.springboot.wsh.mail.EMailSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,10 +32,10 @@ public class MemberSendMailReceiver {
 
         //执行发送邮件操作
         new EMailSender()
-                .title("会员注册成功通知邮件")
-                .content("恭喜你，你已注册成为我们的会员")
-                .contentType(MailContentTypeEnum.TEXT)
-                .targets(new ArrayList<String>() {{
+                .setTitle("会员注册成功通知邮件")
+                .setContent("恭喜你，你已注册成为我们的会员")
+                .setContentType(Constants.SEND_MAIL_TEXT_TYPE)
+                .setSendMailTargets(new ArrayList<String>() {{
                     add("2897318264@qq.com");
                 }}).send();
     }
